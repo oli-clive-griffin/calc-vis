@@ -23,7 +23,10 @@ scene.add(light)
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
-// ################
+const BOX_COLOR = 0x
+const FACE_COLOR = 0x
+const EDGE_COLOR = 0x
+const POINT_COLOR = 0x
 
 const baseUnit = 10;
 let initialDx = 2;
@@ -39,12 +42,13 @@ const gap = 0.05;
 
 
 // y = x^3 - box
-const renderMainBox = () => {
+const mainBoxMesh = (() => {
   const geometry = new THREE.BoxGeometry(baseUnit, baseUnit, baseUnit);
   const material = new THREE.MeshMatcapMaterial( { color: 0x00ff00, transparent: true, opacity } );
   const box = new THREE.Mesh( geometry, material )
   scene.add(box);
-}
+})()
+const addMainBox = () => scene.add(mainBoxMesh)
 
 // dy = 3x^2 dx - faces
 const faces = [
@@ -52,7 +56,7 @@ const faces = [
   {z: -ninteydeg, x: 0,  y: 0 },
   {z: 0,  x: ninteydeg, y: 0 },
 ]
-const faceObjs = faces.map(({x, y, z}) => {
+const faceMeshes = faces.map(({x, y, z}) => {
   const geometry = new THREE.BoxGeometry(baseUnit, initialDx, baseUnit);
   const material = new THREE.MeshMatcapMaterial( { color: 0x4444ff, transparent: true, opacity } );
   const box = new THREE.Mesh( geometry, material )
@@ -61,7 +65,7 @@ const faceObjs = faces.map(({x, y, z}) => {
   // box.translateOnAxis([0, 0, 1], 5)
   return box
 })
-const renderFaces = () => faceObjs.forEach(o => scene.add(o))
+const addFaces = () => faceMeshes.forEach(o => scene.add(o))
 
 // edges
 const edges = [
@@ -69,7 +73,7 @@ const edges = [
   {w: initialDx, h: baseUnit, d: initialDx, translations: [xAxis, zAxis], dir: 'y'},
   {w: initialDx, h: initialDx, d: baseUnit, translations: [yAxis, xAxis], dir: 'z'},
 ]
-const edgeObjs = edges.map(({w, h, d, translations, dir}) => {
+const edgeMeshes = edges.map(({w, h, d, translations, dir}) => {
   const geometry = new THREE.BoxGeometry(w, h, d);
   const material = new THREE.MeshMatcapMaterial( { color: 0xdd7722, transparent: true, opacity } );
   const edge = new THREE.Mesh( geometry, material )
@@ -78,10 +82,10 @@ const edgeObjs = edges.map(({w, h, d, translations, dir}) => {
   scene.add(edge)
   return { edge, dir }
 })
-const renderEdges = () => edgeObjs.forEach(({edge}) => scene.add(edge))
+const addEdges = () => edgeMeshes.forEach(({edge}) => scene.add(edge))
 
 // point
-const point = (() => {
+const pointMesh = (() => {
   const geometry = new THREE.BoxGeometry(initialDx, initialDx, initialDx);
   const material = new THREE.MeshMatcapMaterial( { color: 0xff0000, transparent: true, opacity: 1 } );
   const point = new THREE.Mesh( geometry, material )
@@ -90,26 +94,27 @@ const point = (() => {
   point.translateZ(halfBoxHeightPlusOffset)
   return point
 })()
-const renderPoint = () => scene.add(point)
+const addPoint = () => scene.add(pointMesh)
 
-renderMainBox();
-renderEdges()
-renderFaces()
-renderPoint()
+addMainBox()
+addEdges()
+addFaces()
+addPoint()
 
 const slider = document.querySelector('#slider')
+
 let prevval = 1
 slider.addEventListener('input', (e) => {
   const translate = e.target.value - prevval;
-  faceObjs.forEach(box => box.translateY(translate))
-  faceObjs.forEach(box => box.scale.set(1, e.target.value, 1))
+  faceMeshes.forEach(box => box.translateY(translate))
+  faceMeshes.forEach(box => box.scale.set(1, e.target.value, 1))
   prevval = e.target.value
 
-  edgeObjs.forEach(o => handleEdgeTranslate(o.edge, o.dir, translate))
-  edgeObjs.forEach(o => handleEdgeScale(o.edge, o.dir, e.target.value))
+  edgeMeshes.forEach(o => handleEdgeTranslate(o.edge, o.dir, translate))
+  edgeMeshes.forEach(o => handleEdgeScale(o.edge, o.dir, e.target.value))
 
-  point.scale.set(e.target.value, e.target.value, e.target.value);
-  handlePointTranslate(point, translate)
+  pointMesh.scale.set(e.target.value, e.target.value, e.target.value);
+  handlePointTranslate(pointMesh, translate)
 })
 
 const handlePointTranslate = (point, translate) => {
