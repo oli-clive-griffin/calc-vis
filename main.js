@@ -6,8 +6,9 @@ import { Vector3 } from 'three'
 
 const scene = new THREE.Scene()
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-camera.position.set(10, 10, 20)
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000)
+// const camera = new THREE.OrthographicCamera(45, 45, 45, 45)
+camera.position.set(10, 20, 100)
 
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector('#bg')
@@ -23,14 +24,14 @@ scene.add(light)
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
-const BOX_COLOR = 0x8888ff
-const FACE_COLOR = 0xffff33
-const EDGE_COLOR = 0x55ff88
-const POINT_COLOR = 0x777744
+const BLUE = 0x59b2e3
+const PINK = 0x8888ff
+const FACE_COLOR = 0xd4e678
+const ORANGE = 0xe88133
 
-const baseUnit = 10;
+const baseUnit = 20;
 let initialDx = 2;
-const opacity = 0.5;
+const defaultOpacity = 0.8;
 const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
 
 const xAxis = new Vector3(1, 0, 0)
@@ -43,16 +44,14 @@ const dirToAxis = {
   z: new Vector3(0, 0, 1),
 }
 
-const ninteydeg = Math.PI/2
 const gap = 0.05;
-
 
 // y = x^3 - box
 const mainBoxMesh = (() => {
   const geometry = new THREE.BoxGeometry(baseUnit, baseUnit, baseUnit);
-  const material = new THREE.MeshMatcapMaterial( { color: BOX_COLOR, transparent: true, opacity } );
+  const material = new THREE.MeshMatcapMaterial( { color: BLUE, transparent: true, opacity: defaultOpacity } );
   const box = new THREE.Mesh( geometry, material )
-  scene.add(box);
+  return box
 })()
 const addMainBox = () => scene.add(mainBoxMesh)
 
@@ -64,7 +63,7 @@ const faces = [
 ]
 const faceMeshes = faces.map(({w, h, d, dir}) => {
   const geometry = new THREE.BoxGeometry(w, h, d);
-  const material = new THREE.MeshMatcapMaterial( { color: FACE_COLOR, transparent: true, opacity } );
+  const material = new THREE.MeshMatcapMaterial( { color: FACE_COLOR, transparent: true, opacity: 0.5 } );
   const faceMesh = new THREE.Mesh( geometry, material )
   faceMesh.translateOnAxis(dirToAxis[dir], halfBoxHeightPlusOffset + gap)
   return { faceMesh, dir }
@@ -79,7 +78,7 @@ const edges = [
 ]
 const edgeMeshes = edges.map(({w, h, d, translations, dir}) => {
   const geometry = new THREE.BoxGeometry(w, h, d);
-  const material = new THREE.MeshMatcapMaterial( { color: EDGE_COLOR, transparent: true, opacity } );
+  const material = new THREE.MeshMatcapMaterial( { color: ORANGE, transparent: true, opacity: defaultOpacity } );
   const edgeMesh = new THREE.Mesh( geometry, material )
   edgeMesh.translateOnAxis(translations[0], halfBoxHeightPlusOffset + gap)
   edgeMesh.translateOnAxis(translations[1], halfBoxHeightPlusOffset + gap)
@@ -91,7 +90,7 @@ const addEdges = () => edgeMeshes.forEach(({ edgeMesh }) => scene.add(edgeMesh))
 // point
 const pointMesh = (() => {
   const geometry = new THREE.BoxGeometry(initialDx, initialDx, initialDx);
-  const material = new THREE.MeshMatcapMaterial( { color: POINT_COLOR, transparent: true, opacity: 1 } );
+  const material = new THREE.MeshMatcapMaterial( { color: PINK, transparent: true, opacity: defaultOpacity } );
   const point = new THREE.Mesh( geometry, material )
   point.translateX(halfBoxHeightPlusOffset + gap)
   point.translateY(halfBoxHeightPlusOffset + gap)
