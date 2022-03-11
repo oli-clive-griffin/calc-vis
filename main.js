@@ -38,14 +38,15 @@ const ninteydeg = Math.PI/2
 const gap = 0.05;
 
 
-const genBox = () => {
-  const geometry = new THREE.BoxGeometry( baseUnit, baseUnit, baseUnit );
+// y = x^3 - box
+const renderMainBox = () => {
+  const geometry = new THREE.BoxGeometry(baseUnit);
   const material = new THREE.MeshMatcapMaterial( { color: 0x00ff00, transparent: true, opacity } );
   const box = new THREE.Mesh( geometry, material )
   scene.add(box);
 }
-genBox();
 
+// dy = 3x^2 dx - faces
 const faces = [
   {z: 0,  x: 0,  y: 0 },
   {z: -ninteydeg, x: 0,  y: 0 },
@@ -60,15 +61,13 @@ const faceObjs = faces.map(({x, y, z}) => {
   // box.translateOnAxis([0, 0, 1], 5)
   return box
 })
-faceObjs.forEach(o => scene.add(o))
+const renderFaces = () => faceObjs.forEach(o => scene.add(o))
 
-
-
-let edgeDx = initialDx;
+// edges
 const edges = [
-  {w: baseUnit, h: edgeDx, d: edgeDx, translations: [zAxis, yAxis], dir: 'x'},
-  {w: edgeDx, h: baseUnit, d: edgeDx, translations: [xAxis, zAxis], dir: 'y'},
-  {w: edgeDx, h: edgeDx, d: baseUnit, translations: [yAxis, xAxis], dir: 'z'},
+  {w: baseUnit, h: initialDx, d: initialDx, translations: [zAxis, yAxis], dir: 'x'},
+  {w: initialDx, h: baseUnit, d: initialDx, translations: [xAxis, zAxis], dir: 'y'},
+  {w: initialDx, h: initialDx, d: baseUnit, translations: [yAxis, xAxis], dir: 'z'},
 ]
 const edgeObjs = edges.map(({w, h, d, translations, dir}) => {
   const geometry = new THREE.BoxGeometry(w, h, d);
@@ -79,7 +78,22 @@ const edgeObjs = edges.map(({w, h, d, translations, dir}) => {
   scene.add(edge)
   return { edge, dir }
 })
-edgeObjs.forEach(({edge}) => scene.add(edge))
+const renderEdges = () => edgeObjs.forEach(({edge}) => scene.add(edge))
+
+// point
+renderPoint = () => {
+  const geometry = new THREE.BoxGeometry(20, 20, 20);
+  const material = new THREE.MeshMatcapMaterial( { color: 0x00ff00, transparent: true, opacity } );
+  const point = new THREE.Mesh( geometry, material )
+  point.translateX(halfBoxHeightPlusOffset)
+  point.translateY(halfBoxHeightPlusOffset)
+  point.translateZ(halfBoxHeightPlusOffset)
+  scene.add(point);
+}
+renderMainBox();
+renderEdges()
+renderFaces()
+renderPoint()
 
 const slider = document.querySelector('#slider')
 let prevval = 1
