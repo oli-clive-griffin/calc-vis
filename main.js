@@ -23,10 +23,10 @@ scene.add(light)
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
-const BOX_COLOR = 0x
-const FACE_COLOR = 0x
-const EDGE_COLOR = 0x
-const POINT_COLOR = 0x
+const BOX_COLOR = 0x8888ff
+const FACE_COLOR = 0xffff33
+const EDGE_COLOR = 0x55ff88
+const POINT_COLOR = 0x777744
 
 const baseUnit = 10;
 let initialDx = 2;
@@ -37,6 +37,12 @@ const xAxis = new Vector3(1, 0, 0)
 const yAxis = new Vector3(0, 1, 0)
 const zAxis = new Vector3(0, 0, 1)
 
+const dirToAxis = {
+  x: new Vector3(1, 0, 0),
+  y: new Vector3(0, 1, 0),
+  z: new Vector3(0, 0, 1),
+}
+
 const ninteydeg = Math.PI/2
 const gap = 0.05;
 
@@ -44,7 +50,7 @@ const gap = 0.05;
 // y = x^3 - box
 const mainBoxMesh = (() => {
   const geometry = new THREE.BoxGeometry(baseUnit, baseUnit, baseUnit);
-  const material = new THREE.MeshMatcapMaterial( { color: 0x00ff00, transparent: true, opacity } );
+  const material = new THREE.MeshMatcapMaterial( { color: BOX_COLOR, transparent: true, opacity } );
   const box = new THREE.Mesh( geometry, material )
   scene.add(box);
 })()
@@ -52,20 +58,18 @@ const addMainBox = () => scene.add(mainBoxMesh)
 
 // dy = 3x^2 dx - faces
 const faces = [
-  {z: 0,  x: 0,  y: 0 },
-  {z: -ninteydeg, x: 0,  y: 0 },
-  {z: 0,  x: ninteydeg, y: 0 },
+  {w: initialDx, h: baseUnit, d: baseUnit, dir: 'x'},
+  {w: baseUnit, h: initialDx, d: baseUnit, dir: 'y'},
+  {w: baseUnit, h: baseUnit, d: initialDx, dir: 'z'},
 ]
-const faceMeshes = faces.map(({x, y, z}) => {
-  const geometry = new THREE.BoxGeometry(baseUnit, initialDx, baseUnit);
-  const material = new THREE.MeshMatcapMaterial( { color: 0x4444ff, transparent: true, opacity } );
-  const box = new THREE.Mesh( geometry, material )
-  box.rotation.set(x, y, z)
-  box.translateY(halfBoxHeightPlusOffset + gap)
-  // box.translateOnAxis([0, 0, 1], 5)
-  return box
+const faceMeshes = faces.map(({w, h, d, dir}) => {
+  const geometry = new THREE.BoxGeometry(w, h, d);
+  const material = new THREE.MeshMatcapMaterial( { color: FACE_COLOR, transparent: true, opacity } );
+  const faceMesh = new THREE.Mesh( geometry, material )
+  faceMesh.translateOnAxis(dirToAxis[dir], halfBoxHeightPlusOffset + gap)
+  return { faceMesh, dir }
 })
-const addFaces = () => faceMeshes.forEach(o => scene.add(o))
+const addFaces = () => faceMeshes.forEach(({ faceMesh }) => scene.add(faceMesh))
 
 // edges
 const edges = [
@@ -75,23 +79,23 @@ const edges = [
 ]
 const edgeMeshes = edges.map(({w, h, d, translations, dir}) => {
   const geometry = new THREE.BoxGeometry(w, h, d);
-  const material = new THREE.MeshMatcapMaterial( { color: 0xdd7722, transparent: true, opacity } );
-  const edge = new THREE.Mesh( geometry, material )
-  edge.translateOnAxis(translations[0], halfBoxHeightPlusOffset + gap)
-  edge.translateOnAxis(translations[1], halfBoxHeightPlusOffset + gap)
-  scene.add(edge)
-  return { edge, dir }
+  const material = new THREE.MeshMatcapMaterial( { color: EDGE_COLOR, transparent: true, opacity } );
+  const edgeMesh = new THREE.Mesh( geometry, material )
+  edgeMesh.translateOnAxis(translations[0], halfBoxHeightPlusOffset + gap)
+  edgeMesh.translateOnAxis(translations[1], halfBoxHeightPlusOffset + gap)
+  scene.add(edgeMesh)
+  return { edgeMesh, dir }
 })
-const addEdges = () => edgeMeshes.forEach(({edge}) => scene.add(edge))
+const addEdges = () => edgeMeshes.forEach(({ edgeMesh }) => scene.add(edgeMesh))
 
 // point
 const pointMesh = (() => {
   const geometry = new THREE.BoxGeometry(initialDx, initialDx, initialDx);
-  const material = new THREE.MeshMatcapMaterial( { color: 0xff0000, transparent: true, opacity: 1 } );
+  const material = new THREE.MeshMatcapMaterial( { color: POINT_COLOR, transparent: true, opacity: 1 } );
   const point = new THREE.Mesh( geometry, material )
-  point.translateX(halfBoxHeightPlusOffset)
-  point.translateY(halfBoxHeightPlusOffset)
-  point.translateZ(halfBoxHeightPlusOffset)
+  point.translateX(halfBoxHeightPlusOffset + gap)
+  point.translateY(halfBoxHeightPlusOffset + gap)
+  point.translateZ(halfBoxHeightPlusOffset + gap)
   return point
 })()
 const addPoint = () => scene.add(pointMesh)
@@ -103,18 +107,20 @@ addPoint()
 
 const slider = document.querySelector('#slider')
 
-let prevval = 1
+let prevval = initialDx / 2
 slider.addEventListener('input', (e) => {
   const translate = e.target.value - prevval;
-  faceMeshes.forEach(box => box.translateY(translate))
-  faceMeshes.forEach(box => box.scale.set(1, e.target.value, 1))
-  prevval = e.target.value
 
-  edgeMeshes.forEach(o => handleEdgeTranslate(o.edge, o.dir, translate))
-  edgeMeshes.forEach(o => handleEdgeScale(o.edge, o.dir, e.target.value))
+  faceMeshes.forEach(({ faceMesh, dir }) => handleFaceTranslate(faceMesh, dir, translate))
+  faceMeshes.forEach(({ faceMesh, dir }) => handleFaceScale(faceMesh, dir, e.target.value))
+
+  edgeMeshes.forEach(({ edgeMesh, dir }) => handleEdgeTranslate(edgeMesh, dir, translate))
+  edgeMeshes.forEach(({ edgeMesh, dir }) => handleEdgeScale(edgeMesh, dir, e.target.value))
 
   pointMesh.scale.set(e.target.value, e.target.value, e.target.value);
   handlePointTranslate(pointMesh, translate)
+
+  prevval = e.target.value
 })
 
 const handlePointTranslate = (point, translate) => {
@@ -123,18 +129,30 @@ const handlePointTranslate = (point, translate) => {
   point.translateZ(translate)
 }
 
-const handleEdgeTranslate = (edgeObj, dir, length) => {
+const handleFaceTranslate = (faceMesh, dir, amount) => {
+  if (dir === 'x') faceMesh.translateX(amount)
+  if (dir === 'y') faceMesh.translateY(amount)
+  if (dir === 'z') faceMesh.translateZ(amount)
+}
+
+const handleFaceScale = (faceMesh, dir, amount) => {
+  if (dir === 'x') faceMesh.scale.setX(amount)
+  if (dir === 'y') faceMesh.scale.setY(amount)
+  if (dir === 'z') faceMesh.scale.setZ(amount)
+}
+
+const handleEdgeTranslate = (edgeObj, dir, amount) => {
   if (dir === 'x') {
-    edgeObj.translateOnAxis(zAxis, length)
-    edgeObj.translateOnAxis(yAxis, length)
+    edgeObj.translateOnAxis(zAxis, amount)
+    edgeObj.translateOnAxis(yAxis, amount)
   }
   if (dir === 'y'){
-    edgeObj.translateOnAxis(xAxis, length)
-    edgeObj.translateOnAxis(zAxis, length)
+    edgeObj.translateOnAxis(xAxis, amount)
+    edgeObj.translateOnAxis(zAxis, amount)
   }
   if (dir === 'z') {
-    edgeObj.translateOnAxis(xAxis, length)
-    edgeObj.translateOnAxis(yAxis, length)
+    edgeObj.translateOnAxis(xAxis, amount)
+    edgeObj.translateOnAxis(yAxis, amount)
   }
 }
 
