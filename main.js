@@ -27,7 +27,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 const baseUnit = 10;
 let initialDx = 2;
-const opacity = 0.9;
+const opacity = 0.5;
 const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
 
 const xAxis = new Vector3(1, 0, 0)
@@ -40,7 +40,7 @@ const gap = 0.05;
 
 // y = x^3 - box
 const renderMainBox = () => {
-  const geometry = new THREE.BoxGeometry(baseUnit);
+  const geometry = new THREE.BoxGeometry(baseUnit, baseUnit, baseUnit);
   const material = new THREE.MeshMatcapMaterial( { color: 0x00ff00, transparent: true, opacity } );
   const box = new THREE.Mesh( geometry, material )
   scene.add(box);
@@ -71,7 +71,7 @@ const edges = [
 ]
 const edgeObjs = edges.map(({w, h, d, translations, dir}) => {
   const geometry = new THREE.BoxGeometry(w, h, d);
-  const material = new THREE.MeshMatcapMaterial( { color: 0xdd7722, transparent: true, opacity: 0.5 } );
+  const material = new THREE.MeshMatcapMaterial( { color: 0xdd7722, transparent: true, opacity } );
   const edge = new THREE.Mesh( geometry, material )
   edge.translateOnAxis(translations[0], halfBoxHeightPlusOffset + gap)
   edge.translateOnAxis(translations[1], halfBoxHeightPlusOffset + gap)
@@ -81,15 +81,17 @@ const edgeObjs = edges.map(({w, h, d, translations, dir}) => {
 const renderEdges = () => edgeObjs.forEach(({edge}) => scene.add(edge))
 
 // point
-renderPoint = () => {
-  const geometry = new THREE.BoxGeometry(20, 20, 20);
-  const material = new THREE.MeshMatcapMaterial( { color: 0x00ff00, transparent: true, opacity } );
+const point = (() => {
+  const geometry = new THREE.BoxGeometry(initialDx, initialDx, initialDx);
+  const material = new THREE.MeshMatcapMaterial( { color: 0xff0000, transparent: true, opacity: 1 } );
   const point = new THREE.Mesh( geometry, material )
   point.translateX(halfBoxHeightPlusOffset)
   point.translateY(halfBoxHeightPlusOffset)
   point.translateZ(halfBoxHeightPlusOffset)
-  scene.add(point);
-}
+  return point
+})()
+const renderPoint = () => scene.add(point)
+
 renderMainBox();
 renderEdges()
 renderFaces()
@@ -105,9 +107,16 @@ slider.addEventListener('input', (e) => {
 
   edgeObjs.forEach(o => handleEdgeTranslate(o.edge, o.dir, translate))
   edgeObjs.forEach(o => handleEdgeScale(o.edge, o.dir, e.target.value))
+
+  point.scale.set(e.target.value, e.target.value, e.target.value);
+  handlePointTranslate(point, translate)
 })
 
-// const handle
+const handlePointTranslate = (point, translate) => {
+  point.translateX(translate)
+  point.translateY(translate)
+  point.translateZ(translate)
+}
 
 const handleEdgeTranslate = (edgeObj, dir, length) => {
   if (dir === 'x') {
@@ -125,15 +134,9 @@ const handleEdgeTranslate = (edgeObj, dir, length) => {
 }
 
 const handleEdgeScale = (edgeObj, dir, length) => {
-  if (dir === 'x') {
-    edgeObj.scale.set(1, length, length)
-  }
-  if (dir === 'y'){
-    edgeObj.scale.set(length, 1, length)
-  }
-  if (dir === 'z') {
-    edgeObj.scale.set(length, length, 1)
-  }
+  if (dir === 'x') edgeObj.scale.set(1, length, length)
+  if (dir === 'y') edgeObj.scale.set(length, 1, length)
+  if (dir === 'z') edgeObj.scale.set(length, length, 1)
 }
 
 const animate = () => {
