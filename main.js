@@ -4,10 +4,12 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import addAllToScene from './components/box'
 
-const INITIAL_DX = 1
+// change this is html too 
+const INITIAL_DX = 1.5
+
 const X = 10
-const GAP = 0
-// const EXPANSION = 1.04
+const GAP = 0.1
+const EXPANDY_NESS = 0.3
 
 const COLORS = {
   boxColor: 0x59b2e3,
@@ -30,13 +32,13 @@ light.position.set(20, 30, 40)
 scene.add(light)
 const controls = new OrbitControls(camera, renderer.domElement);
 
-const handleValueChange = addAllToScene(scene, INITIAL_DX, X, GAP, COLORS);
+const handleValueChange = addAllToScene(scene, INITIAL_DX, X, GAP, EXPANDY_NESS, COLORS);
 
 let prevDx = INITIAL_DX
 document.querySelector('#slider').addEventListener('input', (e) => {
   const newDx = e.target.value
-  const translateAmount = (newDx - prevDx) / 2
-  const scaleAmount = newDx
+  const translateAmount = (newDx - prevDx) * EXPANDY_NESS
+  const scaleAmount = newDx / INITIAL_DX
 
   handleValueChange(translateAmount, scaleAmount)
 

@@ -1,40 +1,62 @@
 import * as THREE from 'three'
 import { Vector3 } from 'three'
 
-const defaultOpacity = 0.8;
+const DEFAULT_OPACITY = 0.8;
 
-const xAxis = new Vector3(1, 0, 0)
-const yAxis = new Vector3(0, 1, 0)
-const zAxis = new Vector3(0, 0, 1)
-
-const dirToAxis = {
+const faceDirToTranslateVector = {
   x: new Vector3(1, 0, 0),
   y: new Vector3(0, 1, 0),
   z: new Vector3(0, 0, 1),
+}
+const edgeDirToTranslateVector = {
+  x: new Vector3(0, 1, 1),
+  y: new Vector3(1, 0, 1),
+  z: new Vector3(1, 1, 0),
+}
+
+const getFaceInitialTranslate = (dir, initialDx) => {
+  // half face thickness
+  const h = initialDx / 2
+  if (dir === 'x') return [h, 0, 0]
+  if (dir === 'y') return [0, h, 0]
+  if (dir === 'z') return [0, 0, h]
+}
+
+const getEdgeInitialTranslate = (dir, initialDx) => {
+  // half edge thickness
+  const h = initialDx / 2
+  if (dir === 'x') return [0, h, h]
+  if (dir === 'y') return [h, 0, h]
+  if (dir === 'z') return [h, h, 0]
+
 }
 
 // y = x^3 - box
 const genMainBoxMesh = (baseUnit, color) => {
   const geometry = new THREE.BoxGeometry(baseUnit, baseUnit, baseUnit);
-  const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: defaultOpacity } );
+  const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: DEFAULT_OPACITY } );
   const boxMesh = new THREE.Mesh( geometry, material )
 
   return boxMesh
 }
 
 // dy = 3x^2 dx - faces
-const genFaceMeshes = (baseUnit, initialDx, gap, color) => {
-  const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
+const genFaceMeshes = (baseUnit, initialDx, gap, initialTransform, color) => {
+  const halfBoxHeight = baseUnit / 2
 
   const faces = [
     {w: initialDx, h: baseUnit, d: baseUnit, dir: 'x'},
     {w: baseUnit, h: initialDx, d: baseUnit, dir: 'y'},
     {w: baseUnit, h: baseUnit, d: initialDx, dir: 'z'},
   ].map(({w, h, d, dir}) => {
-    const geometry = new THREE.BoxGeometry(w, h, d);
-    const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: 0.5 } );
+    const [tx, ty, tz] = getFaceInitialTranslate(dir, initialDx)
+    const geometry = new THREE.BoxGeometry(w, h, d)
+      .translate(tx, ty, tz)
+    const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: 0.5 } )
     const mesh = new THREE.Mesh( geometry, material )
-    mesh.translateOnAxis(dirToAxis[dir], halfBoxHeightPlusOffset + gap)
+
+    mesh.translateOnAxis(faceDirToTranslateVector[dir], halfBoxHeight + gap + initialTransform) // asdf
+
     return { mesh, dir }
   })
 
@@ -42,19 +64,23 @@ const genFaceMeshes = (baseUnit, initialDx, gap, color) => {
 }
 
 // edges
-const genEdgeMeshes = (baseUnit, initialDx, gap, color) => {
-  const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
+const genEdgeMeshes = (baseUnit, initialDx, gap, initialTransform, color) => {
+  const halfBoxHeight = baseUnit / 2
 
+  console.log(initialDx);
   const edges = [
-    {w: baseUnit, h: initialDx, d: initialDx, translations: [zAxis, yAxis], dir: 'x'},
-    {w: initialDx, h: baseUnit, d: initialDx, translations: [xAxis, zAxis], dir: 'y'},
-    {w: initialDx, h: initialDx, d: baseUnit, translations: [yAxis, xAxis], dir: 'z'},
-  ].map(({w, h, d, translations, dir}) => {
-    const geometry = new THREE.BoxGeometry(w, h, d);
-    const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: defaultOpacity } );
+    {w: baseUnit, h: initialDx, d: initialDx, dir: 'x'},
+    {w: initialDx, h: baseUnit, d: initialDx, dir: 'y'},
+    {w: initialDx, h: initialDx, d: baseUnit, dir: 'z'},
+  ].map(({w, h, d, dir}) => {
+    const [tx, ty ,tz] = getEdgeInitialTranslate(dir, initialDx)
+    const geometry = new THREE.BoxGeometry(w, h, d)
+      .translate(tx, ty, tz)
+    const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: DEFAULT_OPACITY } )
     const mesh = new THREE.Mesh( geometry, material )
-    mesh.translateOnAxis(translations[0], halfBoxHeightPlusOffset + gap)
-    mesh.translateOnAxis(translations[1], halfBoxHeightPlusOffset + gap)
+
+    mesh.translateOnAxis(edgeDirToTranslateVector[dir], halfBoxHeight + gap + initialTransform) // asdf
+
     return { mesh, dir }
   })
 
@@ -62,69 +88,58 @@ const genEdgeMeshes = (baseUnit, initialDx, gap, color) => {
 }
 
 // point
-const genPointMesh = (baseUnit, initialDx, gap, color) => {
-  const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
+const genPointMesh = (baseUnit, initialDx, gap, initialTransform, color) => {
+  const halfBoxHeight = baseUnit / 2
+  const halfPointWidth = initialDx / 2
 
-  const geometry = new THREE.BoxGeometry(initialDx, initialDx, initialDx);
-  const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: defaultOpacity } );
+  const geometry = new THREE.BoxGeometry(initialDx, initialDx, initialDx)
+    .translate(halfPointWidth, halfPointWidth, halfPointWidth)
+  const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: DEFAULT_OPACITY } );
   const point = new THREE.Mesh( geometry, material )
 
-  point.translateX(halfBoxHeightPlusOffset + gap)
-  point.translateY(halfBoxHeightPlusOffset + gap)
-  point.translateZ(halfBoxHeightPlusOffset + gap)
+  point.translateOnAxis(new Vector3(1, 1, 1), halfBoxHeight + gap + initialTransform) // asdf
 
   return point
 }
 
 const handleFaceTranslate = (mesh, dir, amount) => {
-  if (dir === 'x') mesh.translateX(amount)
-  if (dir === 'y') mesh.translateY(amount)
-  if (dir === 'z') mesh.translateZ(amount)
+  mesh.translateOnAxis(faceDirToTranslateVector[dir], amount)
 }
 
+const handleEdgeTranslate = (mesh, dir, amount) => {
+  mesh.translateOnAxis(edgeDirToTranslateVector[dir], amount)
+}
+
+const handlePointTranslate = (mesh, amount) => {
+  mesh.translateOnAxis(new Vector3(1, 1, 1), amount)
+}
+
+// TODO scale using a vector
 const handleFaceScale = (mesh, dir, scale) => {
+ console.log('handlefacescale', scale)
   if (dir === 'x') mesh.scale.setX(scale)
   if (dir === 'y') mesh.scale.setY(scale)
   if (dir === 'z') mesh.scale.setZ(scale)
 }
 
-const handleEdgeTranslate = (mesh, dir, amount) => {
-  if (dir === 'x') {
-    mesh.translateOnAxis(zAxis, amount)
-    mesh.translateOnAxis(yAxis, amount)
-  }
-  if (dir === 'y'){
-    mesh.translateOnAxis(xAxis, amount)
-    mesh.translateOnAxis(zAxis, amount)
-  }
-  if (dir === 'z') {
-    mesh.translateOnAxis(xAxis, amount)
-    mesh.translateOnAxis(yAxis, amount)
-  }
-}
-
 const handleEdgeScale = (mesh, dir, scale) => {
+ console.log('handleedgscale', scale)
   if (dir === 'x') mesh.scale.set(1, scale, scale)
   if (dir === 'y') mesh.scale.set(scale, 1, scale)
   if (dir === 'z') mesh.scale.set(scale, scale, 1)
 }
 
-const handlePointTranslate = (mesh, amount) => {
-  mesh.translateX(amount)
-  mesh.translateY(amount)
-  mesh.translateZ(amount)
-}
-
 const handlePointScale = (mesh, amount) => mesh.scale.set(amount, amount, amount);
 
-
-export const addAllToScene = (scene, initialDx, baseUnit, gap, colorConfig) => {
+export const addAllToScene = (scene, initialDx, baseUnit, gap, expandynes, colorConfig) => {
   const { boxColor: mainBoxColor, edgeColor, faceColor, pointColor } = colorConfig
+  const initialTransform = initialDx * expandynes
 
+  console.log('box; ', initialDx)
   const boxMesh = genMainBoxMesh(baseUnit, mainBoxColor)
-  const edges = genEdgeMeshes(baseUnit, initialDx, gap, edgeColor)
-  const faces = genFaceMeshes(baseUnit, initialDx, gap, faceColor)
-  const pointMesh = genPointMesh(baseUnit, initialDx, gap, pointColor)
+  const edges = genEdgeMeshes(baseUnit, initialDx, gap, initialTransform, edgeColor)
+  const faces = genFaceMeshes(baseUnit, initialDx, gap, initialTransform, faceColor)
+  const pointMesh = genPointMesh(baseUnit, initialDx, gap, initialTransform, pointColor)
   const meshes = [
     boxMesh,
     ...edges.map(({ mesh }) => mesh),
