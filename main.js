@@ -32,15 +32,15 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 const handleValueChange = addAllToScene(scene, INITIAL_DX, X, GAP, COLORS);
 
-let prevValue = INITIAL_DX
+let prevDx = INITIAL_DX
 document.querySelector('#slider').addEventListener('input', (e) => {
-  // const translateAmount = (e.target.value - prevValue);
-  const translateAmount = (e.target.value - prevValue) / 2
-  const scaleAmount = e.target.value
+  const newDx = e.target.value
+  const translateAmount = (newDx - prevDx) / 2
+  const scaleAmount = newDx
 
   handleValueChange(translateAmount, scaleAmount)
 
-  prevValue = e.target.value
+  prevDx = newDx
 })
 
 
