@@ -31,7 +31,7 @@ const getEdgeInitialTranslate = (dir, initialDx) => {
 
 }
 
-// y = x^3 - box
+// box
 const genMainBoxMesh = (baseUnit, color) => {
   const geometry = new THREE.BoxGeometry(baseUnit, baseUnit, baseUnit);
   const material = new THREE.MeshMatcapMaterial( { color, transparent: true, opacity: DEFAULT_OPACITY } );
@@ -40,7 +40,7 @@ const genMainBoxMesh = (baseUnit, color) => {
   return boxMesh
 }
 
-// dy = 3x^2 dx - faces
+// faces
 const genFaceMeshes = (baseUnit, initialDx, gap, initialTransform, color) => {
   const halfBoxHeight = baseUnit / 2
 
@@ -116,14 +116,12 @@ const handlePointTranslate = (mesh, amount) => {
 
 // TODO scale using a vector
 const handleFaceScale = (mesh, dir, scale) => {
- console.log('handlefacescale', scale)
   if (dir === 'x') mesh.scale.setX(scale)
   if (dir === 'y') mesh.scale.setY(scale)
   if (dir === 'z') mesh.scale.setZ(scale)
 }
 
 const handleEdgeScale = (mesh, dir, scale) => {
- console.log('handleedgscale', scale)
   if (dir === 'x') mesh.scale.set(1, scale, scale)
   if (dir === 'y') mesh.scale.set(scale, 1, scale)
   if (dir === 'z') mesh.scale.set(scale, scale, 1)
@@ -131,9 +129,9 @@ const handleEdgeScale = (mesh, dir, scale) => {
 
 const handlePointScale = (mesh, amount) => mesh.scale.set(amount, amount, amount);
 
-export const addAllToScene = (scene, initialDx, baseUnit, gap, expandynes, colorConfig) => {
+export const addAllToScene = (scene, initialDx, baseUnit, gap, expandyness, colorConfig) => {
   const { boxColor: mainBoxColor, edgeColor, faceColor, pointColor } = colorConfig
-  const initialTransform = initialDx * expandynes
+  const initialTransform = initialDx * expandyness
 
   console.log('box; ', initialDx)
   const boxMesh = genMainBoxMesh(baseUnit, mainBoxColor)
