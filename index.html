@@ -8,7 +8,13 @@
   </head>
   <body>
     <div id="app">
-      <input type="range" min="0.0001" max="2" step="0.01" value="1" id="slider">
+      <div id="container">
+        <div class="row">
+          <p class="regular-text">change dx</p>
+          <div class="spacer-h-m"></div>
+          <input type="range" min="0.0001" max="2" step="0.001" value="1" id="slider">
+        </div>
+      </div>
     </div>
     <canvas id="bg"></canvas>
     <script type="module" src="/main.js"></script>
