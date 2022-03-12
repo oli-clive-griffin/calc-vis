@@ -78,45 +78,47 @@ const genPointMesh = (baseUnit, initialDx, color) => {
   return point
 }
 
-
-const handlePointTranslateFactory = (point) => (amount) => {
-  point.translateX(amount)
-  point.translateY(amount)
-  point.translateZ(amount)
+const handleFaceTranslate = (mesh, dir, amount) => {
+  if (dir === 'x') mesh.translateX(amount)
+  if (dir === 'y') mesh.translateY(amount)
+  if (dir === 'z') mesh.translateZ(amount)
 }
 
-const handleFaceTranslateFactory = (faceMesh, dir) => (amount) => {
-  if (dir === 'x') faceMesh.translateX(amount)
-  if (dir === 'y') faceMesh.translateY(amount)
-  if (dir === 'z') faceMesh.translateZ(amount)
+const handleFaceScale = (mesh, dir, scale) => {
+  if (dir === 'x') mesh.scale.setX(scale)
+  if (dir === 'y') mesh.scale.setY(scale)
+  if (dir === 'z') mesh.scale.setZ(scale)
 }
 
-const handleFaceScaleFactory = (faceMesh, dir) => (scale) => {
-  if (dir === 'x') faceMesh.scale.setX(scale)
-  if (dir === 'y') faceMesh.scale.setY(scale)
-  if (dir === 'z') faceMesh.scale.setZ(scale)
-}
-
-const handleEdgeTranslateFactory = (edgeMesh, dir) => (amount) => {
+const handleEdgeTranslate = (mesh, dir, amount) => {
   if (dir === 'x') {
-    edgeMesh.translateOnAxis(zAxis, amount)
-    edgeMesh.translateOnAxis(yAxis, amount)
+    mesh.translateOnAxis(zAxis, amount)
+    mesh.translateOnAxis(yAxis, amount)
   }
   if (dir === 'y'){
-    edgeMesh.translateOnAxis(xAxis, amount)
-    edgeMesh.translateOnAxis(zAxis, amount)
+    mesh.translateOnAxis(xAxis, amount)
+    mesh.translateOnAxis(zAxis, amount)
   }
   if (dir === 'z') {
-    edgeMesh.translateOnAxis(xAxis, amount)
-    edgeMesh.translateOnAxis(yAxis, amount)
+    mesh.translateOnAxis(xAxis, amount)
+    mesh.translateOnAxis(yAxis, amount)
   }
 }
 
-const handleEdgeScaleFactory = (edgeMesh, dir) => (scale) => {
-  if (dir === 'x') edgeMesh.scale.set(1, scale, scale)
-  if (dir === 'y') edgeMesh.scale.set(scale, 1, scale)
-  if (dir === 'z') edgeMesh.scale.set(scale, scale, 1)
+const handleEdgeScale = (mesh, dir) => (scale) => {
+  if (dir === 'x') mesh.scale.set(1, scale, scale)
+  if (dir === 'y') mesh.scale.set(scale, 1, scale)
+  if (dir === 'z') mesh.scale.set(scale, scale, 1)
 }
+
+const handlePointTranslate = (mesh, amount) => {
+  mesh.translateX(amount)
+  mesh.translateY(amount)
+  mesh.translateZ(amount)
+}
+
+const handlePointScale = (mesh, amount) => mesh.scale.set(amount, amount, amount);
+
 
 export const addAllToScene = (scene, initialDx, baseUnit, config) => {
   const { boxColor, edgeColor, faceColor, pointColor } = config
@@ -134,46 +136,19 @@ export const addAllToScene = (scene, initialDx, baseUnit, config) => {
 
   meshes.forEach((mesh) => scene.add(mesh))
 
-  // const handleFacesTranslate = (amount) => faces.forEach(
-  //   ({ mesh, dir }) => handleFaceTranslateFactory(mesh, dir)(amount))
-
-  // const handleFacesScale = (amount) => faces.forEach(
-  //   ({ mesh, dir }) => handleFaceScaleFactory(mesh, dir)(amount))
-
-  // const handleEdgesTranslate = (amount) => edges.forEach(
-  //   ({ mesh, dir }) => handleEdgeTranslateFactory(mesh, dir)(amount))
-
-  // const handleEdgesScale = (amount) => 
-
-  // const handlePointTranslate = handlePointTranslateFactory(pointMesh)
-
-  // const handlePointScale = (amount) => 
-  //   pointMesh.scale.set(amount, amount, amount);
-
   const handleValueChange = (translateAmount, scaleAmount) => {
-    // handleFacesTranslate(translateAmount)
-    // handleFacesScale(scaleAmount)
-    // handleEdgesTranslate(translateAmount)
-    // handleEdgesScale(scaleAmount)
-    // handlePointTranslate(translateAmount)
-    // handlePointScale(scaleAmount)
-
-    faces.forEach(
-      ({ mesh, dir }) => handleFaceTranslateFactory(mesh, dir)(translateAmount))
+    faces.forEach(({ mesh, dir }) => {
+      handleFaceTranslate(mesh, dir, translateAmount)
+      handleFaceScale(mesh, dir, scaleAmount)
+    })
   
-    faces.forEach(
-      ({ mesh, dir }) => handleFaceScaleFactory(mesh, dir)(scaleAmount))
-  
-    edges.forEach(
-      ({ mesh, dir }) => handleEdgeTranslateFactory(mesh, dir)(translateAmount))
+    edges.forEach(({ mesh, dir }) => {
+      handleEdgeTranslate(mesh, dir, translateAmount)
+      handleEdgeScale(mesh, dir, scaleAmount)
+    })
 
-    edges.forEach(
-      ({ mesh, dir }) => handleEdgeScaleFactory(mesh, dir)(scaleAmount))
-
-    handlePointTranslateFactory(pointMesh)
-
-    pointMesh.scale.set(scaleAmount, scaleAmount, scaleAmount);
-
+    handlePointTranslate(pointMesh, translateAmount)
+    handlePointScale(pointMesh, scaleAmount)
   }
 
   return handleValueChange
