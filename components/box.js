@@ -130,30 +130,32 @@ const handleEdgeScale = (mesh, dir, scale) => {
 const handlePointScale = (mesh, amount) => mesh.scale.set(amount, amount, amount);
 
 export const addAllToScene = (scene, initialDx, baseUnit, gap, expandyness, colorConfig) => {
-  const { boxColor: mainBoxColor, edgeColor, faceColor, pointColor } = colorConfig
+  const { cubeColor, edgeColor } = colorConfig
   const initialTransform = initialDx * expandyness
 
-  console.log('box; ', initialDx)
-  const boxMesh = genMainBoxMesh(baseUnit, mainBoxColor)
-  const edges = genEdgeMeshes(baseUnit, initialDx, gap, initialTransform, edgeColor)
-  const faces = genFaceMeshes(baseUnit, initialDx, gap, initialTransform, faceColor)
-  const pointMesh = genPointMesh(baseUnit, initialDx, gap, initialTransform, pointColor)
+  const boxMesh = genMainBoxMesh(baseUnit, cubeColor)
+  const edgeMeshes = genEdgeMeshes(baseUnit, initialDx, gap, initialTransform, edgeColor)
+  const faceMeshes = genFaceMeshes(baseUnit, initialDx, gap, initialTransform, edgeColor)
+  const pointMesh = genPointMesh(baseUnit, initialDx, gap, initialTransform, edgeColor)
+
   const meshes = [
     boxMesh,
-    ...edges.map(({ mesh }) => mesh),
-    ...faces.map(({ mesh }) => mesh),
+    ...edgeMeshes.map(({ mesh }) => mesh),
+    ...faceMeshes.map(({ mesh }) => mesh),
     pointMesh
   ]
 
   meshes.forEach((mesh) => scene.add(mesh))
 
-  const handleValueChange = (translateAmount, scaleAmount) => {
-    faces.forEach(({ mesh, dir }) => {
+  const handleValueChange = (translateAmount, dx) => {
+    const scaleAmount = dx / initialDx
+
+    faceMeshes.forEach(({ mesh, dir }) => {
       handleFaceTranslate(mesh, dir, translateAmount)
       handleFaceScale(mesh, dir, scaleAmount)
     })
   
-    edges.forEach(({ mesh, dir }) => {
+    edgeMeshes.forEach(({ mesh, dir }) => {
       handleEdgeTranslate(mesh, dir, translateAmount)
       handleEdgeScale(mesh, dir, scaleAmount)
     })

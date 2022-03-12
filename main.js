@@ -2,7 +2,8 @@ import './style.css'
 
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import addAllToScene from './components/box'
+import addCubeToScene from './components/box'
+import addPiecesToScene from './components/pieces'
 
 // change this is html too 
 const INITIAL_DX = 1.5
@@ -12,7 +13,7 @@ const GAP = 0.1
 const EXPANDY_NESS = 0.3
 
 const COLORS = {
-  boxColor: 0x59b2e3,
+  cubeColor: 0x59b2e3,
   edgeColor: 0x8888ff,
   faceColor: 0xd4e678,
   pointColor: 0xe88133,
@@ -22,7 +23,7 @@ const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.set(10, 20, 100)
 const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector('#bg')
+  canvas: document.querySelector('#canvas'),
 });
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -32,19 +33,19 @@ light.position.set(20, 30, 40)
 scene.add(light)
 const controls = new OrbitControls(camera, renderer.domElement);
 
-const handleValueChange = addAllToScene(scene, INITIAL_DX, X, GAP, EXPANDY_NESS, COLORS);
+let dx = INITIAL_DX
+const handleValueChangeMain = addCubeToScene(scene, INITIAL_DX, X, GAP, EXPANDY_NESS, COLORS);
+const handleValueChangeSide = addPiecesToScene(scene, INITIAL_DX, X)
 
-let prevDx = INITIAL_DX
 document.querySelector('#slider').addEventListener('input', (e) => {
   const newDx = e.target.value
-  const translateAmount = (newDx - prevDx) * EXPANDY_NESS
-  const scaleAmount = newDx / INITIAL_DX
+  const translateAmount = (newDx - dx) * EXPANDY_NESS
 
-  handleValueChange(translateAmount, scaleAmount)
+  handleValueChangeMain(translateAmount, newDx)
+  handleValueChangeSide(newDx)
 
-  prevDx = newDx
+  dx = newDx
 })
-
 
 const animate = () => {
   requestAnimationFrame(animate);
