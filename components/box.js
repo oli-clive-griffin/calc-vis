@@ -13,8 +13,6 @@ const dirToAxis = {
   z: new Vector3(0, 0, 1),
 }
 
-const gap = 0.2;
-
 // y = x^3 - box
 const genMainBoxMesh = (baseUnit, color) => {
   const geometry = new THREE.BoxGeometry(baseUnit, baseUnit, baseUnit);
@@ -25,7 +23,7 @@ const genMainBoxMesh = (baseUnit, color) => {
 }
 
 // dy = 3x^2 dx - faces
-const genFaceMeshes = (baseUnit, initialDx, color) => {
+const genFaceMeshes = (baseUnit, initialDx, gap, color) => {
   const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
 
   const faces = [
@@ -44,7 +42,7 @@ const genFaceMeshes = (baseUnit, initialDx, color) => {
 }
 
 // edges
-const genEdgeMeshes = (baseUnit, initialDx, color) => {
+const genEdgeMeshes = (baseUnit, initialDx, gap, color) => {
   const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
 
   const edges = [
@@ -64,7 +62,7 @@ const genEdgeMeshes = (baseUnit, initialDx, color) => {
 }
 
 // point
-const genPointMesh = (baseUnit, initialDx, color) => {
+const genPointMesh = (baseUnit, initialDx, gap, color) => {
   const halfBoxHeightPlusOffset = (baseUnit + initialDx) / 2
 
   const geometry = new THREE.BoxGeometry(initialDx, initialDx, initialDx);
@@ -105,7 +103,7 @@ const handleEdgeTranslate = (mesh, dir, amount) => {
   }
 }
 
-const handleEdgeScale = (mesh, dir) => (scale) => {
+const handleEdgeScale = (mesh, dir, scale) => {
   if (dir === 'x') mesh.scale.set(1, scale, scale)
   if (dir === 'y') mesh.scale.set(scale, 1, scale)
   if (dir === 'z') mesh.scale.set(scale, scale, 1)
@@ -120,13 +118,13 @@ const handlePointTranslate = (mesh, amount) => {
 const handlePointScale = (mesh, amount) => mesh.scale.set(amount, amount, amount);
 
 
-export const addAllToScene = (scene, initialDx, baseUnit, config) => {
-  const { boxColor, edgeColor, faceColor, pointColor } = config
+export const addAllToScene = (scene, initialDx, baseUnit, gap, colorConfig) => {
+  const { boxColor: mainBoxColor, edgeColor, faceColor, pointColor } = colorConfig
 
-  const boxMesh = genMainBoxMesh(baseUnit, boxColor)
-  const edges = genEdgeMeshes(baseUnit, initialDx, edgeColor)
-  const faces = genFaceMeshes(baseUnit, initialDx, faceColor)
-  const pointMesh = genPointMesh(baseUnit, initialDx, pointColor)
+  const boxMesh = genMainBoxMesh(baseUnit, mainBoxColor)
+  const edges = genEdgeMeshes(baseUnit, initialDx, gap, edgeColor)
+  const faces = genFaceMeshes(baseUnit, initialDx, gap, faceColor)
+  const pointMesh = genPointMesh(baseUnit, initialDx, gap, pointColor)
   const meshes = [
     boxMesh,
     ...edges.map(({ mesh }) => mesh),
