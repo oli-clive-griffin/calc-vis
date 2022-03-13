@@ -1,13 +1,25 @@
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0; 
+/* input {
+  z-index: 1000;
+} */
+
+body, html {
+  height: 100%;
+  width: 100%;
+  margin: 0 !important;
+}
+
+.App {
+  background-color: bisque;
+  height: 100vh;
+}
+
+#canvas {
+  height: 1000px;
+  width: auto;
 }
 
 #container {
-  position: absolute;
-  top: 0;
-  left: 0;
+  width: 20%;
   background-color: #37373d;
   border-radius: 10px;
   padding: 2rem;
