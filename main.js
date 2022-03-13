@@ -9,7 +9,7 @@ import addPiecesToScene from './components/pieces'
 const INITIAL_DX = 1.5
 
 const X = 10
-const GAP = 0.1
+const GAP = 0
 const EXPANDY_NESS = 0.3
 
 const COLORS = {
@@ -33,16 +33,18 @@ light.position.set(20, 30, 40)
 scene.add(light)
 const controls = new OrbitControls(camera, renderer.domElement);
 
-let dx = INITIAL_DX
 const handleValueChangeMain = addCubeToScene(scene, INITIAL_DX, X, GAP, EXPANDY_NESS, COLORS);
-const handleValueChangeSide = addPiecesToScene(scene, INITIAL_DX, X)
+const setDxPieces = addPiecesToScene(scene, INITIAL_DX, X)
 
+let dx = INITIAL_DX
 document.querySelector('#slider').addEventListener('input', (e) => {
   const newDx = e.target.value
   const translateAmount = (newDx - dx) * EXPANDY_NESS
 
   handleValueChangeMain(translateAmount, newDx)
-  handleValueChangeSide(newDx)
+
+  const newThickness = e.target.value / INITIAL_DX
+  setDxPieces(newThickness)
 
   dx = newDx
 })

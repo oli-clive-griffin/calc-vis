@@ -67,7 +67,6 @@ const genFaceMeshes = (baseUnit, initialDx, gap, initialTransform, color) => {
 const genEdgeMeshes = (baseUnit, initialDx, gap, initialTransform, color) => {
   const halfBoxHeight = baseUnit / 2
 
-  console.log(initialDx);
   const edges = [
     {w: baseUnit, h: initialDx, d: initialDx, dir: 'x'},
     {w: initialDx, h: baseUnit, d: initialDx, dir: 'y'},

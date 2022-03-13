@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { Vector3 } from 'three';
 
 const YELLOW = 0xEEEE22
 
@@ -9,27 +8,17 @@ const GLOBAL_X_OFFSET = {
   point: 38,
 }
 
-const genFaceMeshes = (x, dx) => (
-  [0, 1, 2].map((i) => {
-    const geometry = new THREE.BoxGeometry(x, x, dx)
+const genOffsetCuboids = (l, w, h, localOffsets, globalOffset) => (
+  localOffsets.map((offset) => {
+    const geometry = new THREE.BoxGeometry(l, w, h)
     const material = new THREE.MeshMatcapMaterial({ color: YELLOW, transparent: true, opacity: 0.9 })
     const mesh = new THREE.Mesh(geometry, material);
 
-    mesh.translateOnAxis(new Vector3(1, -1, 1), i)
-
-    return mesh
-  })
-    .map(mesh => mesh.translateX(GLOBAL_X_OFFSET.faces))
-)
-
-const genEdgeMeshes = (x, dx) => (
-  [0, 1, 2].map((i) => {
-    const geometry = new THREE.BoxGeometry(dx, x, dx)
-    const material = new THREE.MeshMatcapMaterial({ color: YELLOW, transparent: true, opacity: 0.9 })
-    const mesh = new THREE.Mesh(geometry, material);
-
-    mesh.translateOnAxis(new Vector3(1, -1, 1), i)
-    mesh.translateX(GLOBAL_X_OFFSET.edges)
+    mesh.position.set(
+      globalOffset + offset,
+      -offset,
+      offset,
+    )
 
     return mesh
   })
@@ -45,27 +34,29 @@ const genPointMesh = (dx) => {
   return mesh
 }
 
-const addPiecesToScene = (scene, initialDx, x) => {
-  const faceMeshes = genFaceMeshes(x, initialDx)
-  const edgeMeshes = genEdgeMeshes(x, initialDx)
-  const pointMesh = genPointMesh(initialDx)
+const addPiecesToScene = (scene, thickness, width) => {
+  const faceMeshes = genOffsetCuboids(width, width, thickness, [-1, 0, 1], GLOBAL_X_OFFSET.faces)
+  const edgeMeshes = genOffsetCuboids(thickness, width, thickness, [-1, 0, 1], GLOBAL_X_OFFSET.edges)
+  const pointMesh = genPointMesh(thickness)
 
   const meshes = [...faceMeshes, ...edgeMeshes, pointMesh]
   meshes.forEach(mesh => scene.add(mesh))
 
-  // TODO implement translation for faces and edges
-  return (dx) => {
-    const scale = dx/initialDx
-    faceMeshes.forEach(mesh => {
-      mesh.scale.setZ(scale)
-    });
-    edgeMeshes.forEach(mesh => {
-      mesh.scale.setZ(scale)
-      mesh.scale.setX(scale)
-    })
+  const setPiecesThickness = (newThickness) => {
+
+    for (const mesh of faceMeshes) {
+      mesh.scale.setZ(newThickness)
+    }
+
+    for (const mesh of edgeMeshes) {
+      mesh.scale.set(newThickness, 1, newThickness)
+    }
+
     // use .set for all other scales?
-    pointMesh.scale.set(scale, scale, scale)
+    pointMesh.scale.set(newThickness, newThickness, newThickness)
   }
+
+  return setPiecesThickness
 }
 
 export default addPiecesToScene
