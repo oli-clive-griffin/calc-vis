@@ -6,11 +6,12 @@ canvas {
 
 #container {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 10;
+  left: 10;
   background-color: #37373d;
   border-radius: 10px;
   padding: 2rem;
+  z-index: 9999;
 }
 
 .regular-text {
